@@ -13,6 +13,55 @@ export function createContentSync({ db, xApi, telegramApi, config, now = () => n
     return activeRun;
   }
 
+  async function syncLatest(actor = "manual_latest") {
+    if (activeRun) {
+      const result = await activeRun;
+      return { ...result, joinedExistingRun: true };
+    }
+    activeRun = runLatest(actor).finally(() => { activeRun = null; });
+    return activeRun;
+  }
+
+  async function runLatest(actor) {
+    const startedAt = now().toISOString();
+    const result = { actor, startedAt, checked: 0, discovered: 0, sent: 0, existing: 0, failures: [] };
+
+    for (const username of config.xMonitorUsernames) {
+      const monitor = db.prepare("SELECT * FROM monitors WHERE username = ?").get(username);
+      if (!monitor) continue;
+      result.checked += 1;
+      try {
+        const userId = monitor.x_user_id || await xApi.getUserId(username);
+        const posts = await xApi.getPosts(userId, {
+          includeReplies: config.includeReplies,
+          includeReposts: config.includeReposts
+        });
+        const post = posts.at(-1);
+        if (!post) {
+          markMonitorSuccess(db, username, userId, monitor.since_id, startedAt);
+          continue;
+        }
+
+        const permalink = `https://x.com/${encodeURIComponent(username)}/status/${encodeURIComponent(post.id)}`;
+        const existing = db.prepare("SELECT status FROM posts WHERE post_id = ?").get(post.id);
+        if (existing?.status === "sent") {
+          result.existing += 1;
+        } else {
+          if (insertPost(db, post, username, permalink, now().toISOString())) result.discovered += 1;
+          await deliverPost(db, telegramApi, config, post, username, permalink, now);
+          result.sent += 1;
+        }
+        markMonitorSuccess(db, username, userId, maxPostId(monitor.since_id, post.id), startedAt);
+      } catch (error) {
+        const message = cleanError(error);
+        db.prepare("UPDATE monitors SET last_checked_at = ?, last_error = ?, updated_at = ? WHERE username = ?")
+          .run(startedAt, message, startedAt, username);
+        result.failures.push({ username, error: message });
+      }
+    }
+    return result;
+  }
+
   async function runSync(actor) {
     const startedAt = now().toISOString();
     const result = { actor, startedAt, checked: 0, initialized: 0, discovered: 0, sent: 0, existing: 0, failures: [] };
@@ -89,7 +138,7 @@ export function createContentSync({ db, xApi, telegramApi, config, now = () => n
     };
   }
 
-  return { syncNow, overview };
+  return { syncNow, syncLatest, overview };
 }
 
 async function deliverPost(db, telegramApi, config, post, username, permalink, now) {

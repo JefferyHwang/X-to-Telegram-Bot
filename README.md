@@ -52,6 +52,15 @@ curl -X POST http://localhost:3000/sync \
   -H "Authorization: Bearer your-sync-token"
 ```
 
+如果想立即把每个监控账号最近的一条推文同步到 Telegram，使用：
+
+```sh
+curl -X POST http://localhost:3000/sync/latest \
+  -H "Authorization: Bearer your-sync-token"
+```
+
+这个接口不会重复发送已经成功发送过的最近推文；如果已经发送过，会在结果中显示 `existing: 1`。
+
 ## 首次启动行为
 
 默认情况下，首次同步只记录每个账号当前最新帖子的 ID，不会把历史消息刷到 Telegram。确认配置正确后，如需从首次拉取到的帖子开始转发，设置：

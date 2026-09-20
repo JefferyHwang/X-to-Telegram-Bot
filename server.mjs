@@ -47,6 +47,14 @@ const server = createServer(async (request, response) => {
       const result = await runSync("manual");
       return sendJson(response, result.failures?.length ? 207 : 200, result);
     }
+    if (request.method === "POST" && url.pathname === "/sync/latest") {
+      if (!config.syncAdminToken || request.headers.authorization !== `Bearer ${config.syncAdminToken}`) {
+        return sendJson(response, 401, { error: "sync_auth_required" });
+      }
+      if (!contentSync || syncError) return sendJson(response, 503, { error: "not_configured", message: syncError?.message });
+      const result = await runLatestSync("manual_latest");
+      return sendJson(response, result.failures?.length ? 207 : 200, result);
+    }
     sendJson(response, 404, { error: "not_found" });
   } catch (error) {
     console.error(error);
@@ -66,6 +74,12 @@ server.listen(config.port, config.host, () => {
 
 async function runSync(actor) {
   const result = await contentSync.syncNow(actor);
+  lastSync = { at: new Date().toISOString(), ...result };
+  return result;
+}
+
+async function runLatestSync(actor) {
+  const result = await contentSync.syncLatest(actor);
   lastSync = { at: new Date().toISOString(), ...result };
   return result;
 }

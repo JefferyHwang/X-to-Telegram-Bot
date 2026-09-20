@@ -65,6 +65,35 @@ test("new posts are sent once and failed sends are retried", async (context) => 
   assert.equal(sent.length, 2);
 });
 
+test("latest sync sends the most recent post even after normal initialization", async (context) => {
+  const db = testDb(context);
+  const sent = [];
+  const module = createContentSync({
+    db,
+    config: config(),
+    xApi: {
+      getUserId: async () => "42",
+      getPosts: async () => [
+        { id: "100", text: "old", createdAt: null },
+        { id: "101", text: "latest", createdAt: null }
+      ]
+    },
+    telegramApi: { sendMessage: async (payload) => sent.push(payload) }
+  });
+
+  await module.syncNow("startup");
+  const result = await module.syncLatest("test");
+  assert.equal(result.sent, 1);
+  assert.equal(result.existing, 0);
+  assert.equal(sent.length, 1);
+  assert.match(sent[0].text, /status\/101$/);
+
+  const duplicate = await module.syncLatest("test");
+  assert.equal(duplicate.sent, 0);
+  assert.equal(duplicate.existing, 1);
+  assert.equal(sent.length, 1);
+});
+
 function config(overrides = {}) {
   return {
     telegramChatId: "-1001",
