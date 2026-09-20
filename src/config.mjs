@@ -18,6 +18,7 @@ export function configFromEnv(env = process.env) {
     dbPath: String(env.DB_PATH || DEFAULTS.dbPath),
     telegramBotToken: String(env.TELEGRAM_BOT_TOKEN || "").trim(),
     telegramChatId: String(env.TELEGRAM_CHAT_ID || "").trim(),
+    telegramMessageThreadId: optionalInteger(env.TELEGRAM_MESSAGE_THREAD_ID, "TELEGRAM_MESSAGE_THREAD_ID"),
     xBearerToken: String(env.X_BEARER_TOKEN || "").trim(),
     xMonitorUsernames: uniqueUsernames(env.X_MONITOR_USERNAMES),
     pushExistingOnStart: booleanValue(env.X_PUSH_EXISTING_ON_START, DEFAULTS.pushExistingOnStart),
@@ -67,4 +68,10 @@ function forwardModeValue(value) {
     throw new Error("X_FORWARD_MODE must be 'link' or 'link_and_text'.");
   }
   return mode;
+}
+
+function optionalInteger(value, name) {
+  if (value === undefined || String(value).trim() === "") return "";
+  if (!/^\d+$/.test(String(value).trim())) throw new Error(`${name} must be a positive integer.`);
+  return String(value).trim();
 }

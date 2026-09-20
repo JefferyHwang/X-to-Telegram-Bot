@@ -94,6 +94,23 @@ test("latest sync sends the most recent post even after normal initialization", 
   assert.equal(sent.length, 1);
 });
 
+test("configured forum topic is included in Telegram messages", async (context) => {
+  const db = testDb(context);
+  const sent = [];
+  const module = createContentSync({
+    db,
+    config: config({ pushExistingOnStart: true, telegramMessageThreadId: "123" }),
+    xApi: {
+      getUserId: async () => "42",
+      getPosts: async () => [{ id: "200", text: "topic post", createdAt: null }]
+    },
+    telegramApi: { sendMessage: async (payload) => sent.push(payload) }
+  });
+
+  await module.syncNow("test");
+  assert.equal(sent[0].message_thread_id, 123);
+});
+
 function config(overrides = {}) {
   return {
     telegramChatId: "-1001",

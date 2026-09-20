@@ -151,6 +151,7 @@ async function deliverPost(db, telegramApi, config, post, username, permalink, n
   try {
     await telegramApi.sendMessage({
       chat_id: config.telegramChatId,
+      ...(config.telegramMessageThreadId ? { message_thread_id: Number(config.telegramMessageThreadId) } : {}),
       text: formatMessage(config.forwardMode, username, post.text, permalink),
       disable_web_page_preview: false,
       reply_markup: { inline_keyboard: [[{ text: "View on X", url: permalink }]] }

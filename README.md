@@ -23,6 +23,14 @@ cp .env.example .env
 4. 在 X Developer Portal 创建应用，拿到 X API v2 Bearer Token，写入 `X_BEARER_TOKEN`。
 5. 在 `X_MONITOR_USERNAMES` 中填写要监控的账号，例如 `perpvia,openai`，不要写 `@` 也可以。
 
+如果目标是 Telegram forum 群组中的某个 Topic，再设置：
+
+```env
+TELEGRAM_MESSAGE_THREAD_ID=123
+```
+
+这里填写的是 Topic 的数字 ID，不是 Topic 名称。可以从该 Topic 中的消息链接看到 `thread` 或 `topic` 相关的数字；也可以临时把 Bot 加入群组后，通过 Telegram Bot API 的更新内容查看消息中的 `message_thread_id`。Bot 需要留在该群组中并拥有发消息权限。
+
 默认 `X_FORWARD_MODE=link`，发送消息示例：
 
 ```text
