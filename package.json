@@ -1,0 +1,15 @@
+{
+  "name": "x-to-telegram",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Forward new X posts from monitored accounts to a Telegram chat.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs",
+    "test": "node --test"
+  }
+}
