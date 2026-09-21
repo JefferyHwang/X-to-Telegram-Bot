@@ -21,7 +21,7 @@ cp .env.example .env
 2. 把 Bot 加入目标群组或频道，并让它拥有发消息权限。
 3. 将目标群组或频道的 ID 写入 `TELEGRAM_CHAT_ID`。频道 ID 通常是类似 `-100...` 的数字。
 4. 在 X Developer Portal 创建应用，拿到 X API v2 Bearer Token，写入 `X_BEARER_TOKEN`。
-5. 在 `X_MONITOR_USERNAMES` 中填写要监控的账号，例如 `perpvia,openai`，不要写 `@` 也可以。
+5. 在 `X_MONITOR_USERNAMES` 中填写要监控的账号，例如 `openai`，不要写 `@` 也可以。
 
 如果目标是 Telegram forum 群组中的某个 Topic，再设置：
 
@@ -33,11 +33,6 @@ TELEGRAM_MESSAGE_THREAD_ID=123
 
 默认 `X_FORWARD_MODE=link`，发送消息示例：
 
-```text
-New post from @perpvia
-
-https://x.com/perpvia/status/123456789
-```
 
 如果要同时带正文，设置 `X_FORWARD_MODE=link_and_text`。
 
